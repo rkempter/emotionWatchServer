@@ -39,7 +39,6 @@ Date.prototype.toMysqlFormat = function() {
 };
 
 function queryData(index, currentDate, step, emotions, callback) {
-  
   if(index > 0) {
     endDate = new Date(currentDate.getTime() + step * 1000);
     var query = connection.query("SELECT AVG(wc.`love`) AS love , AVG(wc.`pride`) AS pride, AVG(wc.`surprise`) as surprise, AVG(wc.`excitement`) as excitement, AVG(wc.`joy`) as joy, AVG(wc.`like`) as liking, AVG(wc.`anger`) as anger, AVG(wc.`shame`) as shame, AVG(wc.`shock`) as shock, AVG(wc.`anxiety`) as anxiety, AVG(wc.`sadness`) as sadness, AVG(wc.`dislike`) as dislike  FROM weibo_category as wc, weibo_olympics as wo WHERE wc.id = wo.id AND wo.dateTime > ? AND wo.dateTime < ?", [currentDate.toMysqlFormat(), endDate.toMysqlFormat()]);
