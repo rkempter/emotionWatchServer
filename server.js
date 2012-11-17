@@ -38,30 +38,41 @@ Date.prototype.toMysqlFormat = function() {
     return this.getUTCFullYear() + "-" + twoDigits(1 + this.getUTCMonth()) + "-" + twoDigits(this.getUTCDate()) + " " + twoDigits(this.getUTCHours()) + ":" + twoDigits(this.getUTCMinutes()) + ":" + twoDigits(this.getUTCSeconds());
 };
 
-function queryData(index, currentDate, step, emotions, callback) {
+function queryMax(callback) {
+  var query = connection.query("SELECT MAX(wc.`love`) AS love , MAX(wc.`pride`) AS pride, MAX(wc.`surprise`) as surprise, MAX(wc.`excitement`) as excitement, MAX(wc.`joy`) as joy, MAX(wc.`like`) as liking, MAX(wc.`anger`) as anger, MAX(wc.`shame`) as shame, MAX(wc.`shock`) as shock, MAX(wc.`anxiety`) as anxiety, MAX(wc.`sadness`) as sadness, MAX(wc.`dislike`) as dislike FROM weibo_category as wc", function(err, rows) {
+    callback(rows);
+  });
+
+  return undefined;
+}
+
+function queryData(index, currentDate, step, emotions, maxvalues, callback) {
   if(index > 0) {
     endDate = new Date(currentDate.getTime() + step * 1000);
-    var query = connection.query("SELECT AVG(wc.`love`) AS love , AVG(wc.`pride`) AS pride, AVG(wc.`surprise`) as surprise, AVG(wc.`excitement`) as excitement, AVG(wc.`joy`) as joy, AVG(wc.`like`) as liking, AVG(wc.`anger`) as anger, AVG(wc.`shame`) as shame, AVG(wc.`shock`) as shock, AVG(wc.`anxiety`) as anxiety, AVG(wc.`sadness`) as sadness, AVG(wc.`dislike`) as dislike  FROM weibo_category as wc, weibo_olympics as wo WHERE wc.id = wo.id AND wo.dateTime > ? AND wo.dateTime < ?", [currentDate.toMysqlFormat(), endDate.toMysqlFormat()]);
+    
+    var query = connection.query("SELECT SUM(wc.`love`) AS love , SUM(wc.`pride`) AS pride, SUM(wc.`surprise`) as surprise, SUM(wc.`excitement`) as excitement, SUM(wc.`joy`) as joy, SUM(wc.`like`) as liking, SUM(wc.`anger`) as anger, SUM(wc.`shame`) as shame, SUM(wc.`shock`) as shock, SUM(wc.`anxiety`) as anxiety, SUM(wc.`sadness`) as sadness, SUM(wc.`dislike`) as dislike  FROM weibo_category as wc, weibo_olympics as wo WHERE wc.id = wo.id AND wo.dateTime > ? AND wo.dateTime < ?", [currentDate.toMysqlFormat(), endDate.toMysqlFormat()]);
 
-    query
-      .on('error', function(err) {
-        console.log('Query error!');
-      })
+  query
+    .on('error', function(err) {
+      console.log('Query error!');
+    })
 
-      .on('result', function(row) {
-        var element = new Array();
-        var sum = 0;
-        
+    .on('result', function(row) {
+      var element = new Array();
+      var sum = 0;
+      
+      for(var index in row) {
+        if(!isNaN(row[index])) {
+          sum += parseFloat(row[index]);
+        }
+      }
+
+      if(sum > 0) {
         for(var index in row) {
           if(!isNaN(row[index])) {
-            sum += parseFloat(row[index]);
-          }
-        }
-
-        if(sum > 0) {
-          for(var index in row) {
-            if(!isNaN(row[index])) {
-              element.push( { "emotion": index, "value": parseFloat(row[index]) / sum} );
+            console.log("-----");
+            console.log("Index: "+index+" (max: "+maxvalues[index]+") Value: "+parseFloat(row[index])+" result: "+parseFloat(row[index]) / maxvalues[index]);
+            element.push( { "emotion": index, "value": parseFloat(row[index]) / maxvalues[index]} );
             }
           }
           emotions.push(element); 
@@ -70,7 +81,7 @@ function queryData(index, currentDate, step, emotions, callback) {
       .on('end', function() {
         index--;
         console.log(index);
-        queryData(index, endDate, step, emotions, callback);
+        queryData(index, endDate, step, emotions, maxvalues, callback);
       })
   } else {
     console.log("Callback calling with "+emotions);
@@ -95,10 +106,14 @@ function getEmotionTweets(req, res, next) {
   var startDate = new Date(req.params.currentDateTime);
   var currentDate = startDate;
   var endDate;
+
+  queryMax(function(max) {
+    queryData(windowSize, startDate, step, emotions, max[0], function(emotions) {
+      res.send(emotions);
+    }); 
+  });
   
-  queryData(windowSize, startDate, step, emotions, function(emotions) {
-    res.send(emotions);
-  }); 
+  
 }
 
 server.get('/emotionTweets', getEmotionTweets);
