@@ -13,6 +13,13 @@ function Connection(options) {
 
 module.exports = Connection;
 
+Connection.prototype.initialize = function() {
+    this.getEmotionCategories(function() {
+        this.getMedian(0);
+    });
+    this.getTableMax();
+}
+
 /**
  * Method handles a result row and sums the values for each category up
  *
@@ -41,11 +48,11 @@ Connection.prototype.handleRow = function(row, previousData) {
  * @param median
  * @param max
  */
-Connection.prototype.mapValue = function(value, median, max) {
-    if(value > median) {
-      return 0.5 + 0.5 * value / max;
+Connection.prototype.mapValue = function(value, index) {
+    if(value > this.medians[index]) {
+      return 0.5 + 0.5 * value / this.maxValues[index];
     } else {
-      return value / median;
+      return value / this.medians[index];
     }
 }
 
@@ -60,8 +67,9 @@ Connection.prototype.mapValue = function(value, median, max) {
  * @param response
  * @param callback
  */
-Connection.prototype.queryData = function(currentDate, step, finalEndDate, median, max, response, callback) {
-    if(currentDate.getTime() != finalEndDate.getTime()) {
+Connection.prototype.queryData = function(index, currentDate, step, response, callback) {
+    if(index > 0) {
+        index--;
         var endDate = new Date(currentDate.getTime() + step * 1000);
         var resultCount = 0;
         var responseElement = {
@@ -86,7 +94,7 @@ Connection.prototype.queryData = function(currentDate, step, finalEndDate, media
             var finalDataObject = new Array();
             // Averaging the data
             for(var index in data) {
-                avgValue = mapValue(data[index], median, max);
+                avgValue = mapValue(data[index], index);
 
                 finalDataObject.push( {"emotion": index, "value": avgValue} );
             }
@@ -96,7 +104,7 @@ Connection.prototype.queryData = function(currentDate, step, finalEndDate, media
 
             response.push(responseElement);
             current
-            queryData(endDate, step, finalEndDate, median, max, response, callback);
+            queryData(index, endDate, step, response, callback);
         });
     } else {
         console.log("Got all elements");
@@ -188,8 +196,7 @@ Connection.prototype.getTableMax = function(callback) {
 
       for(var index in row) {
         if(!isNaN(row[index])) {
-          var x = { "label": index, "values": { "max": row[index] } };
-          this.maxValues.push(x);
+            this.maxValues[index] = row[index];
         }
       }
 
