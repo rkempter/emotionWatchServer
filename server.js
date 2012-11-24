@@ -1,6 +1,6 @@
 var mysql = require('mysql');
 var sanitize = require('validator').sanitize;
-var tableConnector = require('./queryTopic');
+var tableConnector = require('./lib/queryTopic');
 
 // Create connection object
 var connection = mysql.createConnection({
@@ -58,6 +58,11 @@ function getEmotionTweets(req, res, next) {
         });
     }
 }
+
+var restify = require('restify');
+var server = restify.createServer();
+server.use( restify.queryParser() );
+server.use( restify.bodyParser() );
 
 server.get('/emotionTweets', getEmotionTweets);
 
