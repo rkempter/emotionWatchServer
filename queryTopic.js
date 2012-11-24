@@ -14,10 +14,11 @@ function Connection(options) {
 module.exports = Connection;
 
 Connection.prototype.initialize = function() {
-    this.getEmotionCategories(function() {
-        this.getMedian(0);
+    var self = this;
+    self.getEmotionCategories(function() {
+        self.getMedian(0);
     });
-    this.getTableMax();
+    self.getTableMax();
 }
 
 /**
@@ -49,10 +50,11 @@ Connection.prototype.handleRow = function(row, previousData) {
  * @param max
  */
 Connection.prototype.mapValue = function(value, index) {
+    var self = this;
     if(value > this.medians[index]) {
-      return 0.5 + 0.5 * value / this.maxValues[index];
+      return 0.5 + 0.5 * value / self.maxValues[index];
     } else {
-      return value / this.medians[index];
+      return value / self.medians[index];
     }
 }
 
@@ -68,6 +70,7 @@ Connection.prototype.mapValue = function(value, index) {
  * @param callback
  */
 Connection.prototype.queryData = function(index, currentDate, step, response, callback) {
+    var self = this;
     if(index > 0) {
         index--;
         var endDate = new Date(currentDate.getTime() + step * 1000);
@@ -78,7 +81,7 @@ Connection.prototype.queryData = function(index, currentDate, step, response, ca
         };
         var data = new Array();
 
-        var query = this.connection.query("SELECT wc.`love` AS love , wc.`pride` AS pride, wc.`surprise` as surprise, wc.`excitement` as excitement, wc.`joy` as joy, wc.`like` as liking, wc.`anger` as anger, wc.`shame` as shame, wc.`shock` as shock, wc.`anxiety` as anxiety, wc.`sadness` as sadness, wc.`dislike` as dislike  FROM "+this.emotionTable+" as wc, "+this.tweetTable+" as wo WHERE wc.id = wo.id AND wo.dateTime > ? AND wo.dateTime < ?", [currentDate.toMysqlFormat(), endDate.toMysqlFormat()]);
+        var query = self.connection.query("SELECT wc.`love` AS love , wc.`pride` AS pride, wc.`surprise` as surprise, wc.`excitement` as excitement, wc.`joy` as joy, wc.`like` as liking, wc.`anger` as anger, wc.`shame` as shame, wc.`shock` as shock, wc.`anxiety` as anxiety, wc.`sadness` as sadness, wc.`dislike` as dislike  FROM "+this.emotionTable+" as wc, "+this.tweetTable+" as wo WHERE wc.id = wo.id AND wo.dateTime > ? AND wo.dateTime < ?", [currentDate.toMysqlFormat(), endDate.toMysqlFormat()]);
         
         query.on('error', function(err) {
             console.log('Query error!')
@@ -103,7 +106,6 @@ Connection.prototype.queryData = function(index, currentDate, step, response, ca
             responseElement.data = finalDataObject;
 
             response.push(responseElement);
-            current
             queryData(index, endDate, step, response, callback);
         });
     } else {
@@ -121,6 +123,7 @@ Connection.prototype.computeInternalMedian = function() {
 };
 
 Connection.prototype.getMedian = function(index) {
+    var self = this;
     if(index == 0) {
         this.medians = new Array();
     }
@@ -129,7 +132,7 @@ Connection.prototype.getMedian = function(index) {
         var category = this.categories[index];
         var medianPosition = 0;
         // get median position
-        var positionQuery = this.connection.query("SELECT COUNT(*) AS total FROM "+this.emotionTable+" as wc WHERE wc.`"+index+"` != 0");
+        var positionQuery = this.connection.query("SELECT COUNT(*) AS total FROM "+self.emotionTable+" as wc WHERE wc.`"+category+"` != 0");
 
         positionQuery.on('error', function(err) {
             console.log("Error happened in getMedian: "+err);
@@ -140,7 +143,7 @@ Connection.prototype.getMedian = function(index) {
         });
 
         positionQuery.on('end', function() {
-            this.queryMedian(index, medianPosition);
+            self.queryMedian(index, medianPosition);
         });
     } else {
         return;
@@ -148,16 +151,17 @@ Connection.prototype.getMedian = function(index) {
 };
 
 Connection.prototype.queryMedian = function(index, position) {
+    var self = this;
     var category = this.categories[index];
-    var medianQuery = connection.query("SELECT wc.`"+category+"` as `"+category+"` FROM "+this.emotionTable+" as wc WHERE wc.`"+category+"` != 0 ORDER BY wc.`"+this.category+"` ASC LIMIT ?, 1", [position]);
+    var medianQuery = connection.query("SELECT wc.`"+category+"` as `"+category+"` FROM "+self.emotionTable+" as wc WHERE wc.`"+category+"` != 0 ORDER BY wc.`"+category+"` ASC LIMIT ?, 1", [position]);
 
     medianQuery.on('result', function(row) {
-        this.medians[category] = row[category];
+        self.medians[category] = row[category];
     });
     
     medianQuery.on('end', function() {
         index++;
-        this.getMedian(index);
+        self.getMedian(index);
     });
 }
 
@@ -166,6 +170,7 @@ Connection.prototype.queryMedian = function(index, position) {
  * Does not include the column names "id", "neutral", "contextual";
  */
 Connection.prototype.getEmotionCategories = function(callback) {
+    var self = this;
     var query = this.connection.query("SELECT * FROM "+this.emotionTable+" LIMIT 1");
 
     query.on('error', function(err) {
@@ -173,10 +178,10 @@ Connection.prototype.getEmotionCategories = function(callback) {
     });
 
     query.on('fields', function(fields) {
-        this.categories = new Array();
+        self.categories = new Array();
         for(var index in fields) {
             if(fields[index] != "id" && fields[index] != "neutral" && fields[index] != "contextual") {
-                this.categories.push(fields[index]);
+                self.categories.push(fields[index]);
             }
         }
     });
@@ -187,19 +192,18 @@ Connection.prototype.getEmotionCategories = function(callback) {
 /**
  * Queries the maximal values in the emotion table
  */
-Connection.prototype.getTableMax = function(callback) {
+Connection.prototype.getTableMax = function() {
+    var self = this;
     var maxQuery = this.connection.query("SELECT MAX(wc.`love`) AS love , MAX(wc.`pride`) AS pride, MAX(wc.`surprise`) as surprise, MAX(wc.`excitement`) as excitement, MAX(wc.`joy`) as joy, MAX(wc.`like`) as `like`, MAX(wc.`anger`) as anger, MAX(wc.`shame`) as shame, MAX(wc.`shock`) as shock, MAX(wc.`anxiety`) as anxiety, MAX(wc.`sadness`) as sadness, MAX(wc.`dislike`) as dislike FROM "+this.emotionTable+" as wc", function(err, rows) {
       if(err) throw err;
 
-      this.maxValues = new Array();
+      self.maxValues = new Array();
       var row = rows[0];
 
       for(var index in row) {
         if(!isNaN(row[index])) {
-            this.maxValues[index] = row[index];
+            self.maxValues[index] = row[index];
         }
       }
-
-      callback();
     });
 };
