@@ -30,6 +30,11 @@ var weibo = tableConnector.createConnection({
 
 weibo.initialize();
 
+var events = eventConnector.createConnection({
+    connection: connection,
+    eventsTable: 'events'
+});
+
 function getEmotionTweets(req, res, next) {
     // Resitify currently has a bug which doesn't allow you to set default headers
     // This headers comply with CORS and allow us to server our response to any origin
@@ -76,12 +81,12 @@ function getTweets(req, res, next) {
     var response = new Array();
 
     if(network == 'weibo') {
-        weibo.queryTweets(startDate, keyword, emotion, response, function() {
-            res.send(response);
+        weibo.queryTweets(startDate, keyword, emotion, response, function(array) {
+            res.send(array);
         });
     } else {
-        twitter.queryTweets(startDate, keyword, emotion, response, function() {
-            res.send(response);
+        twitter.queryTweets(startDate, keyword, emotion, response, function(array) {
+            res.send(array);
         });
     }
 
@@ -95,6 +100,8 @@ function getEventInformation(req, res, next) {
 
     console.log("Requested Event information");
 
+    // use event connector
+
 }
 
 function getEvents(req, res, next) {
@@ -104,6 +111,14 @@ function getEvents(req, res, next) {
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
     console.log("Requested Events");
+
+    var response = new Array();
+    
+    var datetime = req.params.datetime;
+
+    events.getCurrentEvents(datetime, response, function(array) {
+        res.send(array);
+    });
 }
 
 function getAthlete(req, res, next) {
@@ -113,6 +128,8 @@ function getAthlete(req, res, next) {
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
     console.log("Requested Athete");
+
+    
 }
 
 var restify = require('restify');
