@@ -42,7 +42,7 @@ function getEmotionTweets(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     
-    console.log(req.params);
+    //console.log(req.params);
     
     var windowSize = parseInt(req.params.windowSize);
     var network = req.params.network;
@@ -73,7 +73,7 @@ function getTweets(req, res, next) {
 
     console.log("Requested Tweets");
 
-    console.log(req.params);
+    //console.log(req.params);
 
     var emotion = req.params.emotion || undefined;
     var keyword = req.params.keyword || undefined;
@@ -139,7 +139,7 @@ function getPatternWatches(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
-    console.log('Pattern watches requested');
+    //console.log('Pattern watches requested');
 
     var response = new Array();
 
