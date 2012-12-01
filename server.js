@@ -32,8 +32,8 @@ var weibo = tableConnector.createConnection({
 weibo.initialize();
 
 var events = eventConnector.createConnection({
-    connection: connection,
-    eventsTable: 'events'
+    eventsTable: 'events',
+    connection: connection
 });
 
 function getEmotionTweets(req, res, next) {
@@ -122,6 +122,21 @@ function getEvents(req, res, next) {
     });
 }
 
+function getAllEvents(req, res, next) {
+    // Resitify currently has a bug which doesn't allow you to set default headers
+    // This headers comply with CORS and allow us to server our response to any origin
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    console.log("Requested list of all events");
+
+    var response = new Array();
+
+    events.getAllEvents(response, function(array) {
+        res.send(array);
+    });
+}
+
 function getAthlete(req, res, next) {
     // Resitify currently has a bug which doesn't allow you to set default headers
     // This headers comply with CORS and allow us to server our response to any origin
@@ -170,6 +185,8 @@ server.get('/emotionTweets', getEmotionTweets);
 server.get('/tweets', getTweets);
 
 server.get('/events', getEvents);
+
+server.get('/allEvents', getAllEvents);
 
 server.get('/athlete', getAthlete);
 
