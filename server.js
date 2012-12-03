@@ -32,8 +32,8 @@ var weibo = tableConnector.createConnection({
 weibo.initialize();
 
 var events = eventConnector.createConnection({
-    connection: connection,
-    eventsTable: 'events'
+    eventsTable: 'events',
+    connection: connection
 });
 
 function getEmotionTweets(req, res, next) {
@@ -73,20 +73,23 @@ function getTweets(req, res, next) {
 
     console.log("Requested Tweets");
 
-    //console.log(req.params);
+    console.log(req.params);
 
     var emotion = req.params.emotion || undefined;
     var keyword = req.params.keyword || undefined;
     var network = req.params.network || 'twitter';
-    var startDate = new Date('July 28, 2012 22:00:00');//new Date(req.params.startdate);
+    var windowsize = req.params.windowsize || 120;
+    console.log("Startdatetime: "+req.params.datetime);
+    var startDateTime = new Date(req.params.datetime);
+    var endDateTime = new Date(startDateTime.getTime() + windowsize * 1000);
     var response = new Array();
 
     if(network == 'weibo') {
-        weibo.queryTweets(startDate, keyword, emotion, response, function(array) {
+        weibo.queryTweets(startDateTime, endDateTime, keyword, emotion, response, function(array) {
             res.send(array);
         });
     } else {
-        twitter.queryTweets(startDate, keyword, emotion, response, function(array) {
+        twitter.queryTweets(startDateTime, endDateTime, keyword, emotion, response, function(array) {
             res.send(array);
         });
     }
@@ -118,6 +121,21 @@ function getEvents(req, res, next) {
     var datetime = req.params.datetime;
 
     events.getCurrentEvents(datetime, response, function(array) {
+        res.send(array);
+    });
+}
+
+function getAllEvents(req, res, next) {
+    // Resitify currently has a bug which doesn't allow you to set default headers
+    // This headers comply with CORS and allow us to server our response to any origin
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    console.log("Requested list of all events");
+
+    var response = new Array();
+
+    events.getAllEvents(response, function(array) {
         res.send(array);
     });
 }
@@ -170,6 +188,8 @@ server.get('/emotionTweets', getEmotionTweets);
 server.get('/tweets', getTweets);
 
 server.get('/events', getEvents);
+
+server.get('/allEvents', getAllEvents);
 
 server.get('/athlete', getAthlete);
 
