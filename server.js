@@ -151,6 +151,30 @@ function getAthlete(req, res, next) {
     
 }
 
+function getFrequency(req, res, next) {
+    // Resitify currently has a bug which doesn't allow you to set default headers
+    // This headers comply with CORS and allow us to server our response to any origin
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    var startDateTime = new Date(req.params.startDateTime);
+    var endDateTime = new Date(req.params.endDateTime);
+    var windowSize = req.params.windowSize;
+    var network = req.params.network;
+
+    var response = new Array();
+
+    if(network == 'weibo') {
+        weibo.getFrequency(windowSize, startDateTime, endDateTime, response, function(array) {
+            res.send(array);
+        });
+    } else {
+        twitter.getFrequency(windowSize, startDateTime, endDateTime, response, function(array) {
+            res.send(array);
+        });
+    }
+}
+
 function getPatternWatches(req, res, next) {
     // Resitify currently has a bug which doesn't allow you to set default headers
     // This headers comply with CORS and allow us to server our response to any origin
@@ -186,6 +210,8 @@ server.use( restify.bodyParser() );
 server.get('/emotionTweets', getEmotionTweets);
 
 server.get('/tweets', getTweets);
+
+server.get('/frequency', getFrequency);
 
 server.get('/events', getEvents);
 
