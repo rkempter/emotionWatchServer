@@ -42,24 +42,23 @@ function getEmotionTweets(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     
-    //console.log(req.params);
-    
-    var windowSize = parseInt(req.params.windowSize);
+    console.log(req.params);
+
     var network = req.params.network;
     
     // Step in sec
-    var step = parseInt(req.params.timeStep);
+    var step = parseInt(req.params.timeStep) % 60;
     var response = new Array();
     
-    var startDate = new Date(req.params.currentDateTime);
-    var endDate;
+    var startDateTime = new Date(req.params.startDateTime);
+    var endDateTime = new Date(req.params.endDateTime);
 
     if(network == 'weibo') {
-        weibo.queryData(windowSize, startDate, step, response, function(response) {
+        weibo.queryData(startDateTime, endDateTime, step, response, function(response) {
             res.send(response);
         });
     } else {
-        twitter.queryData(windowSize, startDate, step, response, function(response) {
+        twitter.queryData(startDateTime, endDateTime, step, response, function(response) {
             res.send(response);
         });
     }
@@ -71,15 +70,10 @@ function getTweets(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
-    console.log("Requested Tweets");
-
-    console.log(req.params);
-
     var emotion = req.params.emotion || undefined;
     var keyword = req.params.keyword || undefined;
     var network = req.params.network || 'twitter';
     var windowsize = req.params.windowsize || 120;
-    console.log("Startdatetime: "+req.params.datetime);
     var startDateTime = new Date(req.params.datetime);
     var endDateTime = new Date(startDateTime.getTime() + windowsize * 1000);
     var response = new Array();
@@ -157,10 +151,14 @@ function getFrequency(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
+    console.log(req.params);
+
     var startDateTime = new Date(req.params.startDateTime);
     var endDateTime = new Date(req.params.endDateTime);
-    var windowSize = req.params.windowSize;
+    var windowSize = parseInt(req.params.windowsize / 60);
     var network = req.params.network;
+
+    console.log(windowSize);
 
     var response = new Array();
 
