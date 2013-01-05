@@ -1,9 +1,11 @@
 var mysql = require('mysql');
 var sanitize = require('validator').sanitize;
 var check = require('validator').check;
+var vidStreamer = require("vid-streamer");
 var startConnector = require('./lib/queryFrontPage');
 var tableConnector = require('./lib/queryTopic');
 var eventConnector = require('./lib/queryEvents');
+var sportConnector = require('./lib/querySports');
 
 // Create connection object
 var connection = mysql.createConnection({
@@ -29,6 +31,11 @@ var frontPage = startConnector.createConnection({
     table: 'hashtag_profil',
     connection: connection
 });
+
+var sports = sportConnector.createConnection({
+    table: 'sports',
+    connection: connection,
+})
 
 twitter.initialize();
 
@@ -61,6 +68,7 @@ function getEmotionTweets(req, res, next) {
     var keyword = req.params.topic;
     var startDateTime = new Date(req.params.startDateTime);
     var endDateTime = new Date(req.params.endDateTime);
+    var cid = req.params.cid;
 
     try {
         // Validate user input
@@ -72,13 +80,14 @@ function getEmotionTweets(req, res, next) {
         sanitize(keyword).xss();
         sanitize(network).xss();
     } catch (e) {
-        console.log('error: '+e);
+        console.log('error in getEmotionTweets: '+e);
         var empty = new Array();
         res.send(empty);
         return;
     }
     
-    var response = new Array();
+    var response = new Object();
+    response['cid'] = cid; 
 
     if(network == 'weibo') {
         weibo.queryData(startDateTime, endDateTime, keyword, step, response, function(response) {
@@ -89,6 +98,53 @@ function getEmotionTweets(req, res, next) {
             res.send(response);
         });
     }
+}
+
+function getEmotionPatternTweets(req, res, next) {
+
+    console.log('Pattern tweets');
+
+    // Resitify currently has a bug which doesn't allow you to set default headers
+    // This headers comply with CORS and allow us to server our response to any origin
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+     // Step in sec
+    var step = parseInt(req.params.timeStep / 60);
+    var network = req.params.network;
+    var keyword = req.params.topic;
+    var startDateTime = new Date(req.params.startDateTime);
+    var endDateTime = new Date(req.params.endDateTime);
+
+    try {
+        // Validate user input
+        check(step).isInt();
+        check(startDateTime).isDate();
+        check(endDateTime).isDate();
+
+        // Sanitize user input
+        sanitize(keyword).xss();
+        sanitize(network).xss();
+    } catch (e) {
+        console.log('error in getEmotionPatternTweets: '+e);
+        var empty = new Array();
+        res.send(empty);
+        return;
+    }
+    
+    var response = new Object();
+
+    sports.queryHashtag(startDateTime, endDateTime, network, keyword, step, response, function(startDateTime, endDateTime, keyword, step, response) {
+        if(network == 'weibo') {
+            weibo.queryData(startDateTime, endDateTime, keyword, step, response, function(array) {
+                res.send(array);
+            });
+        } else {
+            twitter.queryData(startDateTime, endDateTime, keyword, step, response, function(array) {
+                res.send(array);
+            });
+        }
+    });
 }
 
 function getTweets(req, res, next) {
@@ -117,7 +173,8 @@ function getTweets(req, res, next) {
         sanitize(keyword).xss();
         sanitize(network).xss();
     } catch (e) {
-        console.log('error: '+e);
+
+        console.log('error in getTweets: '+e);
         var empty = new Array();
         res.send(empty);
         return;
@@ -152,13 +209,72 @@ function getEvents(req, res, next) {
         // Validate user input
         check(datetime).isDate();
     } catch (e) {
-        console.log('error: '+e);
+        console.log('error in getEvents: '+e);
         var empty = new Array();
         res.send(empty);
         return;
     }
 
     events.getCurrentEvents(datetime, response, function(array) {
+        res.send(array);
+    });
+}
+
+function getEventInfo(req, res, next) {
+    console.log('getEventInfo');
+    // Resitify currently has a bug which doesn't allow you to set default headers
+    // This headers comply with CORS and allow us to server our response to any origin
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    var sport = req.params.sport;
+    var startDateTime = new Date(req.params.startDateTime);
+    var endDateTime = new Date(req.params.endDateTime);
+
+    try {
+        check(startDateTime).isDate();
+        check(endDateTime).isDate();
+
+        sanitize(sport).xss();       
+    } catch(e) {
+        console.log('error in getEventInfo: '+e);
+        var empty = new Array();
+        res.send(empty);
+        return;
+    }
+
+    var response = new Array();
+
+    events.getEventInfo(sport, startDateTime, endDateTime, response, function(array) {
+        res.send(array);
+    });
+}
+
+function getEventVideo(req, res, next) {
+    // Resitify currently has a bug which doesn't allow you to set default headers
+    // This headers comply with CORS and allow us to server our response to any origin
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    var sport = req.params.sport;
+    var startDateTime = new Date(req.params.startDateTime);
+    var endDateTime = new Date(req.params.endDateTime);
+
+    try {
+        check(startDateTime).isDate();
+        check(endDateTime).isDate();
+
+        sanitize(sport).xss();       
+    } catch(e) {
+        console.log('error in getEventInfo: '+e);
+        var empty = new Array();
+        res.send(empty);
+        return;
+    }
+
+    var response = new Array();
+
+    events.getEventVideo(sport, startDateTime, endDateTime, response, function(array) {
         res.send(array);
     });
 }
@@ -178,7 +294,7 @@ function getSpecEvents(req, res, next) {
         sanitize(gender).xss();
         sanitize(sport).xss();
     } catch (e) {
-        console.log('error: '+e);
+        console.log('error in getSpecEvents: '+e);
         var empty = new Array();
         res.send(empty);
         return;
@@ -204,6 +320,51 @@ function getHashtagProfil(req, res, next) {
     });
 }
 
+function getPatternFrequency(req, res, next) {
+
+    // Resitify currently has a bug which doesn't allow you to set default headers
+    // This headers comply with CORS and allow us to server our response to any origin
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    var startDateTime = new Date(req.params.startDateTime);
+    var endDateTime = new Date(req.params.endDateTime);
+    var step = parseInt(req.params.windowsize / 60);
+    var keyword = req.params.keyword;
+    var network = req.params.network;
+    var cid = req.params.cid;
+
+    try {
+        // Validate user input
+        check(step).isInt();
+        check(startDateTime).isDate();
+        check(endDateTime).isDate();
+
+        // Sanitize user input
+        sanitize(keyword).xss();
+        sanitize(network).xss();
+    } catch (e) {
+        console.log('error in getPatternFrequency: '+e);
+        var empty = new Array();
+        res.send(empty);
+        return;
+    }
+
+    var response = new Object();
+
+    sports.queryHashtag(startDateTime, endDateTime, network, keyword, step, response, function(startDateTime, endDateTime, keyword, step, response) {
+        if(network == 'weibo') {
+            weibo.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
+                res.send(array);
+            });
+        } else {
+            twitter.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
+                res.send(array);
+            });
+        }
+    });
+}
+
 function getFrequency(req, res, next) {
 
     // Resitify currently has a bug which doesn't allow you to set default headers
@@ -213,13 +374,14 @@ function getFrequency(req, res, next) {
 
     var startDateTime = new Date(req.params.startDateTime);
     var endDateTime = new Date(req.params.endDateTime);
-    var windowSize = parseInt(req.params.windowsize / 60);
+    var step = parseInt(req.params.windowsize / 60);
     var keyword = req.params.keyword;
     var network = req.params.network;
+    var cid = req.params.cid;
 
     try {
         // Validate user input
-        check(windowSize).isInt();
+        check(step).isInt();
         check(startDateTime).isDate();
         check(endDateTime).isDate();
 
@@ -227,20 +389,21 @@ function getFrequency(req, res, next) {
         sanitize(keyword).xss();
         sanitize(network).xss();
     } catch (e) {
-        console.log('error: '+e);
+        console.log('error in getFrequency: '+e);
         var empty = new Array();
         res.send(empty);
         return;
     }
 
     var response = new Object();
+    response['cid'] = cid;
 
     if(network == 'weibo') {
-        weibo.getFrequency(windowSize, keyword, startDateTime, endDateTime, response, function(array) {
+        weibo.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
             res.send(array);
         });
     } else {
-        twitter.getFrequency(windowSize, keyword, startDateTime, endDateTime, response, function(array) {
+        twitter.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
             res.send(array);
         });
     }
@@ -253,11 +416,21 @@ server.use( restify.bodyParser() );
 
 server.get('/emotionTweets', getEmotionTweets);
 
+server.get('/emotionPatternTweets', getEmotionPatternTweets);
+
 server.get('/tweets', getTweets);
 
 server.get('/frequency', getFrequency);
 
+server.get('/patternFrequency', getPatternFrequency);
+
 server.get('/frontPage', getHashtagProfil);
+
+server.get('/getEventInfo', getEventInfo);
+
+server.get('/getEventVideo', getEventVideo);
+
+server.get('/video', vidStreamer);
 
 server.get('/events', getEvents);
 
