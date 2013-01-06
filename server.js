@@ -430,7 +430,7 @@ server.get('/getEventInfo', getEventInfo);
 
 server.get('/getEventVideo', getEventVideo);
 
-server.get('/video', vidStreamer);
+server.get('/videos/:video', vidStreamer);
 
 server.get('/events', getEvents);
 
