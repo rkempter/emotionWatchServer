@@ -63,7 +63,7 @@ function getEmotionTweets(req, res, next) {
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
      // Step in sec
-    var step = parseInt(req.params.timeStep / 60);
+    var step = parseInt(req.params.timeStep);
     var network = req.params.network;
     var keyword = req.params.topic;
     var startDateTime = new Date(req.params.startDateTime);
@@ -110,7 +110,7 @@ function getEmotionPatternTweets(req, res, next) {
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
      // Step in sec
-    var step = parseInt(req.params.timeStep / 60);
+    var step = parseInt(req.params.timeStep);
     var network = req.params.network;
     var keyword = req.params.topic;
     var startDateTime = new Date(req.params.startDateTime);
@@ -329,7 +329,7 @@ function getPatternFrequency(req, res, next) {
 
     var startDateTime = new Date(req.params.startDateTime);
     var endDateTime = new Date(req.params.endDateTime);
-    var step = parseInt(req.params.windowsize / 60);
+    var step = parseInt(req.params.windowsize);
     var keyword = req.params.keyword;
     var network = req.params.network;
     var cid = req.params.cid;
@@ -374,7 +374,7 @@ function getFrequency(req, res, next) {
 
     var startDateTime = new Date(req.params.startDateTime);
     var endDateTime = new Date(req.params.endDateTime);
-    var step = parseInt(req.params.windowsize / 60);
+    var step = parseInt(req.params.windowsize);
     var keyword = req.params.keyword;
     var network = req.params.network;
     var cid = req.params.cid;
