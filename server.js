@@ -20,9 +20,9 @@ connection.connect(function(err) {
 });
 
 var twitter = tableConnector.createConnection({
-    emotionTable: 'tweets_allGymnastics_emotionRel',
+    emotionTable: 'gymnastics_emotionRel',
     tweetTable: 'tweets_allGymnastics',
-    topicTable: 'twitter_topic',
+    topicTable: 'twitter_topic_2',
     userTable: 'twitter_users',
     connection: connection
 });
@@ -68,6 +68,7 @@ function getEmotionTweets(req, res, next) {
     var keyword = req.params.topic;
     var startDateTime = new Date(req.params.startDateTime);
     var endDateTime = new Date(req.params.endDateTime);
+    var keywordType = req.params.keywordType;
     var cid = req.params.cid;
 
     try {
@@ -87,16 +88,29 @@ function getEmotionTweets(req, res, next) {
     }
     
     var response = new Object();
-    response['cid'] = cid; 
 
-    if(network == 'weibo') {
-        weibo.queryData(startDateTime, endDateTime, keyword, step, response, function(response) {
-            res.send(response);
+    if(keywordType == 'event') {
+        sports.queryHashtag(startDateTime, endDateTime, network, keyword, step, response, function(startDateTime, endDateTime, keyword, step, response) {
+            if(network == 'weibo') {
+                weibo.queryData(startDateTime, endDateTime, keyword, step, response, function(response) {
+                    res.send(response);
+                });
+            } else {
+                twitter.queryData(startDateTime, endDateTime, keyword, step, response, function(response) {
+                    res.send(response);
+                });
+            }
         });
     } else {
-        twitter.queryData(startDateTime, endDateTime, keyword, step, response, function(response) {
-            res.send(response);
-        });
+        if(network == 'weibo') {
+            weibo.queryData(startDateTime, endDateTime, keyword, step, response, function(response) {
+                res.send(response);
+            });
+        } else {
+            twitter.queryData(startDateTime, endDateTime, keyword, step, response, function(response) {
+                res.send(response);
+            });
+        }
     }
 }
 
@@ -160,6 +174,7 @@ function getTweets(req, res, next) {
     var network = req.params.network || 'twitter';
     var windowsize = parseInt(req.params.windowsize) || 120;
     var startDateTime = new Date(req.params.datetime);
+    var keywordType = req.params.keywordType;
     var endDateTime = new Date(startDateTime.getTime() + windowsize * 1000);
 
     try {
@@ -171,6 +186,7 @@ function getTweets(req, res, next) {
         // Sanitize user input
         sanitize(emotion).xss();
         sanitize(keyword).xss();
+        sanitize(keywordType).xss();
         sanitize(network).xss();
     } catch (e) {
 
@@ -180,16 +196,29 @@ function getTweets(req, res, next) {
         return;
     }
 
-    if(network == 'weibo') {
-        weibo.queryTweets(startDateTime, endDateTime, keyword, emotion, response, function(array) {
-            res.send(array);
+    if(keywordType == 'event') {
+        sports.queryHashtag(startDateTime, endDateTime, network, keyword, emotion, response, function(startDateTime, endDateTime, keyword, emotion, response) {
+            if(network == 'weibo') {
+                weibo.queryTweets(startDateTime, endDateTime, keyword, emotion, response, function(array) {
+                res.send(array);
+            });
+            } else {
+                twitter.queryTweets(startDateTime, endDateTime, keyword, emotion, response, function(array) {
+                res.send(array);
+            });
+            }
         });
     } else {
-        twitter.queryTweets(startDateTime, endDateTime, keyword, emotion, response, function(array) {
-            res.send(array);
-        });
+        if(network == 'weibo') {
+            weibo.queryTweets(startDateTime, endDateTime, keyword, emotion, response, function(array) {
+                res.send(array);
+            });
+        } else {
+            twitter.queryTweets(startDateTime, endDateTime, keyword, emotion, response, function(array) {
+                res.send(array);
+            });
+        }
     }
-
 }
 
 function getEvents(req, res, next) {
@@ -378,6 +407,7 @@ function getFrequency(req, res, next) {
     var keyword = req.params.keyword;
     var network = req.params.network;
     var cid = req.params.cid;
+    var keywordType = req.params.keywordType;
 
     try {
         // Validate user input
@@ -387,6 +417,7 @@ function getFrequency(req, res, next) {
 
         // Sanitize user input
         sanitize(keyword).xss();
+        sanitize(keywordType).xss();
         sanitize(network).xss();
     } catch (e) {
         console.log('error in getFrequency: '+e);
@@ -398,14 +429,28 @@ function getFrequency(req, res, next) {
     var response = new Object();
     response['cid'] = cid;
 
-    if(network == 'weibo') {
-        weibo.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
-            res.send(array);
-        });
+    if(keywordType == 'event') {
+            sports.queryHashtag(startDateTime, endDateTime, network, keyword, step, response, function(startDateTime, endDateTime, keyword, step, response) {
+                if(network == 'weibo') {
+                    weibo.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
+                        res.send(array);
+                    });
+                } else {
+                    twitter.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
+                        res.send(array);
+                    });
+                }
+            });
     } else {
-        twitter.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
-            res.send(array);
-        });
+        if(network == 'weibo') {
+            weibo.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
+                res.send(array);
+            });
+        } else {
+            twitter.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
+                res.send(array);
+            });
+        }
     }
 }
 
