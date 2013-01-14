@@ -23,12 +23,11 @@ var twitter = tableConnector.createConnection({
     emotionTable: 'gymnastics_emotionRel',
     tweetTable: 'tweets_allGymnastics',
     topicTable: 'twitter_topic_2',
-    userTable: 'twitter_users',
     connection: connection
 });
 
 var frontPage = startConnector.createConnection({
-    table: 'hashtag_profil',
+    table: 'hashtag_profile',
     connection: connection
 });
 
@@ -37,17 +36,12 @@ var sports = sportConnector.createConnection({
     connection: connection,
 })
 
-twitter.initialize();
-
 var weibo = tableConnector.createConnection({
-    emotionTable: 'weibo_category',
+    emotionTable: 'weibo_emotionRelation',
     tweetTable: 'weibo_olympics',
     topicTable: 'weibo_topic',
-    userTable: 'weibo_users',
     connection: connection
 });
-
-weibo.initialize();
 
 var events = eventConnector.createConnection({
     eventsTable: 'events',
@@ -274,8 +268,10 @@ function getEventInfo(req, res, next) {
 
     var response = new Array();
 
-    events.getEventInfo(sport, startDateTime, endDateTime, response, function(array) {
-        res.send(array);
+    sports.queryHashtag(startDateTime, endDateTime, 'twitter', sport, undefined, response, function(startDateTime, endDateTime, sport, emotion, response) {
+        events.getEventInfo(startDateTime, endDateTime, sport.slice(1), response, function(array) {
+            res.send(array);
+        });
     });
 }
 
@@ -303,8 +299,10 @@ function getEventVideo(req, res, next) {
 
     var response = new Array();
 
-    events.getEventVideo(sport, startDateTime, endDateTime, response, function(array) {
-        res.send(array);
+    sports.queryHashtag(startDateTime, endDateTime, 'twitter', sport, undefined, response, function(startDateTime, endDateTime, sport, emotion, response) {
+        events.getEventVideo(sport.slice(1), startDateTime, endDateTime, response, function(array) {
+            res.send(array);
+        });
     });
 }
 
