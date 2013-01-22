@@ -165,7 +165,7 @@ function getTweets(req, res, next) {
 
     var emotion = req.params.emotion || '';
     var keyword = req.params.hashtag || '';
-    var network = req.params.network || 'twitter';
+    var network = req.params.network;
     var windowsize = parseInt(req.params.windowsize) || 120;
     var startDateTime = new Date(req.params.datetime);
     var keywordType = req.params.keywordType;
@@ -459,7 +459,7 @@ server.use( restify.bodyParser() );
 
 server.get('/emotionTweets', getEmotionTweets);
 
-server.get('/emotionPatternTweets', getEmotionPatternTweets);
+server.get('/emotionPatternTweets', getEmotionTweets);
 
 server.get('/tweets', getTweets);
 
