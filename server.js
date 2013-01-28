@@ -479,7 +479,7 @@ server.get('/events', getEvents);
 
 server.get('/specEvents', getSpecEvents);
 
-server.listen(8080, function() {
+server.listen(8124, function() {
   console.log('%s listening at %s, love & peace', server.name, server.url);
 });
 
