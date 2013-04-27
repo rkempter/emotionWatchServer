@@ -6,13 +6,14 @@ var startConnector = require('./lib/queryFrontPage');
 var tableConnector = require('./lib/queryTopic');
 var eventConnector = require('./lib/queryEvents');
 var sportConnector = require('./lib/querySports');
+var CONFIG = require('config').Database;
 
 // Create connection object
 var connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'olympics'
+    host: CONFIG.dbHost,
+    user: CONFIG.dbUser,
+    password: CONFIG.dbPassword,
+    database: CONFIG.dbName
 });
 
 connection.connect(function(err) {
@@ -20,9 +21,7 @@ connection.connect(function(err) {
 });
 
 var twitter = tableConnector.createConnection({
-    emotionTable: 'gymnastics_emotionRel',
-    tweetTable: 'tweets_allGymnastics',
-    topicTable: 'twitter_topic_2',
+    tweetTable: 'merged_tweets',
     connection: connection
 });
 
