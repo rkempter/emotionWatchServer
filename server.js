@@ -16,6 +16,10 @@ var connection = mysql.createConnection({
     database: CONFIG.dbName
 });
 
+if(!CONFIG.debug) {
+    console.log = function() {};
+}
+
 connection.connect(function(err) {
     if(err) throw err;
 });
