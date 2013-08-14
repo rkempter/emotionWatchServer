@@ -119,32 +119,12 @@ function getTweets(req, res, next) {
     }
 
     if(requestType === 'event') {
-
-
-
         events.queryHashtags(parseInt(keyword), network, windowsize, response, function(startDateTime, endDateTime, network, keyword, response) {
             tweets.queryTweets(startDateTime, endDateTime, network, keyword, response, function(array) {
                 res.send(array);
             });
         }, startDateTime, endDateTime);
     } else {
-        var startDateTime = new Date(req.params.startDateTime);
-        var endDateTime = new Date(req.params.endDateTime);
-        var step = parseInt(req.params.windowsize);
-
-        try {
-            // Validate user input
-            check(startDateTime).isDate();
-            check(endDateTime).isDate();
-
-            // Sanitize user input
-            sanitize(keyword).xss();
-        } catch (e) {
-            console.log('error in getFrequency: '+e);
-            res.send([]);
-            return;
-        }
-
         tweets.queryTweets(startDateTime, endDateTime, network, keyword, response, function(array) {
             res.send(array);
         });
@@ -301,7 +281,6 @@ function getFrequency(req, res, next) {
         var startDateTime = new Date(req.params.startDateTime);
         var endDateTime = new Date(req.params.endDateTime);
         var step = parseInt(req.params.windowsize);
-        var keyword = req.params.keyword;
 
         try {
             // Validate user input
