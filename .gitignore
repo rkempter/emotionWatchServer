@@ -1,5 +1,6 @@
 extractor.js
 extractor_sports.js
 videos/
+node_modules/
 config/
 .DS_Store

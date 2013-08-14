@@ -24,25 +24,13 @@ connection.connect(function(err) {
     if(err) throw err;
 });
 
-var twitter = tableConnector.createConnection({
+var tweets = tableConnector.createConnection({
     tweetTable: 'merged_tweets',
     connection: connection
 });
 
 var frontPage = startConnector.createConnection({
     table: 'hashtag_profile',
-    connection: connection
-});
-
-var sports = sportConnector.createConnection({
-    table: 'sports',
-    connection: connection,
-})
-
-var weibo = tableConnector.createConnection({
-    emotionTable: 'weibo_emotionRelation',
-    tweetTable: 'weibo_olympics',
-    topicTable: 'weibo_topic',
     connection: connection
 });
 
@@ -58,11 +46,10 @@ function getEmotionTweets(req, res, next) {
     // This headers comply with CORS and allow us to server our response to any origin
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
      // Step in sec
     var step = parseInt(req.params.timeStep);
     var network = req.params.network;
-    var keyword = req.params.topic;
+    var keyword = req.params.keyword.join("','");
     var startDateTime = new Date(req.params.startDateTime);
     var endDateTime = new Date(req.params.endDateTime);
     var keywordType = req.params.keywordType;
@@ -79,83 +66,23 @@ function getEmotionTweets(req, res, next) {
         sanitize(network).xss();
     } catch (e) {
         console.log('error in getEmotionTweets: '+e);
-        var empty = new Array();
-        res.send(empty);
+        res.send([]);
         return;
     }
     
     var response = new Object();
 
-    if(keywordType == 'event') {
-        sports.queryHashtag(startDateTime, endDateTime, network, keyword, step, response, function(startDateTime, endDateTime, keyword, step, response) {
-            if(network == 'weibo') {
-                weibo.queryData(startDateTime, endDateTime, keyword, step, response, function(response) {
-                    res.send(response);
-                });
-            } else {
-                twitter.queryData(startDateTime, endDateTime, keyword, step, response, function(response) {
-                    res.send(response);
-                });
-            }
+    if(keywordType === 'event') {
+        events.queryHashtags(parseInt(keyword), network, step, response, function(startDateTime, endDateTime, network, keyword, step, response) {
+            tweets.queryData(startDateTime, endDateTime, network, keyword, step, response, function(response) {
+                res.send(response);
+            });
         });
     } else {
-        if(network == 'weibo') {
-            weibo.queryData(startDateTime, endDateTime, keyword, step, response, function(response) {
-                res.send(response);
-            });
-        } else {
-            twitter.queryData(startDateTime, endDateTime, keyword, step, response, function(response) {
-                res.send(response);
-            });
-        }
+        tweets.queryData(startDateTime, endDateTime, network, keyword, step, response, function(response) {
+            res.send(response);
+        });
     }
-}
-
-function getEmotionPatternTweets(req, res, next) {
-
-    console.log('Pattern tweets');
-
-    // Resitify currently has a bug which doesn't allow you to set default headers
-    // This headers comply with CORS and allow us to server our response to any origin
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
-     // Step in sec
-    var step = parseInt(req.params.timeStep);
-    var network = req.params.network;
-    var keyword = req.params.topic;
-    var startDateTime = new Date(req.params.startDateTime);
-    var endDateTime = new Date(req.params.endDateTime);
-
-    try {
-        // Validate user input
-        check(step).isInt();
-        check(startDateTime).isDate();
-        check(endDateTime).isDate();
-
-        // Sanitize user input
-        sanitize(keyword).xss();
-        sanitize(network).xss();
-    } catch (e) {
-        console.log('error in getEmotionPatternTweets: '+e);
-        var empty = new Array();
-        res.send(empty);
-        return;
-    }
-    
-    var response = new Object();
-
-    sports.queryHashtag(startDateTime, endDateTime, network, keyword, step, response, function(startDateTime, endDateTime, keyword, step, response) {
-        if(network == 'weibo') {
-            weibo.queryData(startDateTime, endDateTime, keyword, step, response, function(array) {
-                res.send(array);
-            });
-        } else {
-            twitter.queryData(startDateTime, endDateTime, keyword, step, response, function(array) {
-                res.send(array);
-            });
-        }
-    });
 }
 
 function getTweets(req, res, next) {
@@ -166,13 +93,14 @@ function getTweets(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
-    var emotion = req.params.emotion || '';
+    var requestType = req.params.keywordType;
     var keyword = req.params.hashtag || '';
     var network = req.params.network || 'twitter';
     var windowsize = parseInt(req.params.windowsize) || 120;
     var startDateTime = new Date(req.params.datetime);
-    var keywordType = req.params.keywordType;
     var endDateTime = new Date(startDateTime.getTime() + windowsize * 1000);
+
+    var response = [];
 
     try {
         // Validate user input
@@ -181,41 +109,26 @@ function getTweets(req, res, next) {
         check(endDateTime).isDate();
 
         // Sanitize user input
-        sanitize(emotion).xss();
         sanitize(keyword).xss();
-        sanitize(keywordType).xss();
+        sanitize(requestType).xss();
         sanitize(network).xss();
     } catch (e) {
-
         console.log('error in getTweets: '+e);
-        var empty = new Array();
-        res.send(empty);
+        res.send([]);
         return;
     }
 
-    if(keywordType == 'event') {
-        sports.queryHashtag(startDateTime, endDateTime, network, keyword, emotion, response, function(startDateTime, endDateTime, keyword, emotion, response) {
-            if(network == 'weibo') {
-                weibo.queryTweets(startDateTime, endDateTime, keyword, emotion, response, function(array) {
+    if(requestType === 'event') {
+        events.queryHashtags(parseInt(keyword), network, windowsize, response, function(startDateTime, endDateTime, network, keyword, response) {
+            tweets.queryTweets(startDateTime, endDateTime, network, keyword, response, function(array) {
                 res.send(array);
             });
-            } else {
-                twitter.queryTweets(startDateTime, endDateTime, keyword, emotion, response, function(array) {
-                res.send(array);
-            });
-            }
-        });
+        }, startDateTime, endDateTime);
     } else {
-        if(network == 'weibo') {
-            weibo.queryTweets(startDateTime, endDateTime, keyword, emotion, response, function(array) {
-                res.send(array);
-            });
-        } else {
-            twitter.queryTweets(startDateTime, endDateTime, keyword, emotion, response, function(array) {
-                res.send(array);
-            });
-        }
-    }
+        tweets.queryTweets(startDateTime, endDateTime, network, keyword, response, function(array) {
+            res.send(array);
+        });
+    };
 }
 
 function getEvents(req, res, next) {
@@ -224,8 +137,6 @@ function getEvents(req, res, next) {
     // This headers comply with CORS and allow us to server our response to any origin
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
-    console.log("Requested Events");
 
     var response = new Array();
 
@@ -247,21 +158,15 @@ function getEvents(req, res, next) {
 }
 
 function getEventInfo(req, res, next) {
-    console.log('getEventInfo');
     // Resitify currently has a bug which doesn't allow you to set default headers
     // This headers comply with CORS and allow us to server our response to any origin
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
-    var sport = req.params.sport;
-    var startDateTime = new Date(req.params.startDateTime);
-    var endDateTime = new Date(req.params.endDateTime);
+    var id = parseInt(req.params.id);
 
     try {
-        check(startDateTime).isDate();
-        check(endDateTime).isDate();
-
-        sanitize(sport).xss();       
+        check(id).isInt();    
     } catch(e) {
         console.log('error in getEventInfo: '+e);
         var empty = new Array();
@@ -271,10 +176,8 @@ function getEventInfo(req, res, next) {
 
     var response = new Array();
 
-    sports.queryHashtag(startDateTime, endDateTime, 'twitter', sport, undefined, response, function(startDateTime, endDateTime, sport, emotion, response) {
-        events.getEventInfo(startDateTime, endDateTime, sport.slice(1), response, function(array) {
-            res.send(array);
-        });
+    events.getEventInfo(id, response, function(array) {
+        res.send(array);
     });
 }
 
@@ -284,17 +187,12 @@ function getEventVideo(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
-    var sport = req.params.sport;
-    var startDateTime = new Date(req.params.startDateTime);
-    var endDateTime = new Date(req.params.endDateTime);
+    var id = parseInt(req.params.id);
 
     try {
-        check(startDateTime).isDate();
-        check(endDateTime).isDate();
-
-        sanitize(sport).xss();       
+        check(id).isInt();   
     } catch(e) {
-        console.log('error in getEventInfo: '+e);
+        console.log('error in getEventVideo: '+e);
         var empty = new Array();
         res.send(empty);
         return;
@@ -302,10 +200,8 @@ function getEventVideo(req, res, next) {
 
     var response = new Array();
 
-    sports.queryHashtag(startDateTime, endDateTime, 'twitter', sport, undefined, response, function(startDateTime, endDateTime, sport, emotion, response) {
-        events.getEventVideo(sport.slice(1), startDateTime, endDateTime, response, function(array) {
-            res.send(array);
-        });
+    events.getEventVideo(parseInt(id), response, function(array) {
+        res.send(array);
     });
 }
 
@@ -350,51 +246,6 @@ function getHashtagProfil(req, res, next) {
     });
 }
 
-function getPatternFrequency(req, res, next) {
-
-    // Resitify currently has a bug which doesn't allow you to set default headers
-    // This headers comply with CORS and allow us to server our response to any origin
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
-    var startDateTime = new Date(req.params.startDateTime);
-    var endDateTime = new Date(req.params.endDateTime);
-    var step = parseInt(req.params.windowsize);
-    var keyword = req.params.keyword;
-    var network = req.params.network;
-    var cid = req.params.cid;
-
-    try {
-        // Validate user input
-        check(step).isInt();
-        check(startDateTime).isDate();
-        check(endDateTime).isDate();
-
-        // Sanitize user input
-        sanitize(keyword).xss();
-        sanitize(network).xss();
-    } catch (e) {
-        console.log('error in getPatternFrequency: '+e);
-        var empty = new Array();
-        res.send(empty);
-        return;
-    }
-
-    var response = new Object();
-
-    sports.queryHashtag(startDateTime, endDateTime, network, keyword, step, response, function(startDateTime, endDateTime, keyword, step, response) {
-        if(network == 'weibo') {
-            weibo.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
-                res.send(array);
-            });
-        } else {
-            twitter.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
-                res.send(array);
-            });
-        }
-    });
-}
-
 function getFrequency(req, res, next) {
 
     // Resitify currently has a bug which doesn't allow you to set default headers
@@ -402,57 +253,56 @@ function getFrequency(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
-    var startDateTime = new Date(req.params.startDateTime);
-    var endDateTime = new Date(req.params.endDateTime);
+
+    var requestType = req.params.keywordType;
+    var response = {};
+    response['cid'] = req.params.cid;
+    var network = req.params.network;
     var step = parseInt(req.params.windowsize);
     var keyword = req.params.keyword;
-    var network = req.params.network;
-    var cid = req.params.cid;
-    var keywordType = req.params.keywordType;
 
-    try {
-        // Validate user input
-        check(step).isInt();
-        check(startDateTime).isDate();
-        check(endDateTime).isDate();
-
-        // Sanitize user input
+    try{
         sanitize(keyword).xss();
-        sanitize(keywordType).xss();
         sanitize(network).xss();
-    } catch (e) {
-        console.log('error in getFrequency: '+e);
-        var empty = new Array();
-        res.send(empty);
+        check(step).isInt();
+    } catch(e) {
+        console.log('error: '+e);
+        res.send([]);
         return;
     }
 
-    var response = new Object();
-    response['cid'] = cid;
-
-    if(keywordType == 'event') {
-            sports.queryHashtag(startDateTime, endDateTime, network, keyword, step, response, function(startDateTime, endDateTime, keyword, step, response) {
-                if(network == 'weibo') {
-                    weibo.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
-                        res.send(array);
-                    });
-                } else {
-                    twitter.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
-                        res.send(array);
-                    });
-                }
+    if(requestType === 'event') {
+        events.queryHashtags(parseInt(keyword), network, step, response, function(startDateTime, endDateTime, network, keywords, step, response) {
+            tweets.getFrequency(startDateTime, endDateTime, network, keywords, step, response, function(array) {
+                res.send(array);
             });
+        });
     } else {
-        if(network == 'weibo') {
-            weibo.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
-                res.send(array);
-            });
-        } else {
-            twitter.getFrequency(startDateTime, endDateTime, keyword, step, response, function(array) {
-                res.send(array);
-            });
+        var startDateTime = new Date(req.params.startDateTime);
+        var endDateTime = new Date(req.params.endDateTime);
+        var step = parseInt(req.params.windowsize);
+
+        try {
+            // Validate user input
+            check(startDateTime).isDate();
+            check(endDateTime).isDate();
+        } catch (e) {
+            console.log('error in getFrequency: '+e);
+            res.send([]);
+            return;
         }
-    }
+
+        tweets.getFrequency(startDateTime, endDateTime, network, keyword, step, response, function(array) {
+            res.send(array);
+        });
+    };
+}
+
+function getEvent(req, res, next) {
+    // Resitify currently has a bug which doesn't allow you to set default headers
+    // This headers comply with CORS and allow us to server our response to any origin
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
 }
 
 var restify = require('restify');
@@ -462,13 +312,9 @@ server.use( restify.bodyParser() );
 
 server.get('/emotionTweets', getEmotionTweets);
 
-server.get('/emotionPatternTweets', getEmotionPatternTweets);
-
 server.get('/tweets', getTweets);
 
 server.get('/frequency', getFrequency);
-
-server.get('/patternFrequency', getPatternFrequency);
 
 server.get('/frontPage', getHashtagProfil);
 
@@ -479,6 +325,8 @@ server.get('/getEventVideo', getEventVideo);
 server.get('/videos/:video', vidStreamer);
 
 server.get('/events', getEvents);
+
+server.get('/event/:id', getEvent);
 
 server.get('/specEvents', getSpecEvents);
 
