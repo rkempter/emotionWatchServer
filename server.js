@@ -303,6 +303,14 @@ function getEvent(req, res, next) {
     // This headers comply with CORS and allow us to server our response to any origin
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    var id = parseInt(req.params.id);
+
+    console.log('event request with id: '+id);
+
+    events.getEvent(id, function(array) {
+        res.specEventsd(array);
+    });
 }
 
 var restify = require('restify');
