@@ -49,7 +49,7 @@ function getEmotionTweets(req, res, next) {
      // Step in sec
     var step = parseInt(req.params.timeStep);
     var network = req.params.network;
-    var keyword = req.params.keyword.join("','");
+    var keyword = req.params.keyword;
     var startDateTime = new Date(req.params.startDateTime);
     var endDateTime = new Date(req.params.endDateTime);
     var keywordType = req.params.keywordType;
@@ -309,7 +309,7 @@ function getEvent(req, res, next) {
     console.log('event request with id: '+id);
 
     events.getEvent(id, function(array) {
-        res.specEventsd(array);
+        res.send(array);
     });
 }
 
