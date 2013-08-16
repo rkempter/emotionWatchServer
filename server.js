@@ -313,6 +313,17 @@ function getEvent(req, res, next) {
     });
 }
 
+function getEventList(req, res, next) {
+    // Resitify currently has a bug which doesn't allow you to set default headers
+    // This headers comply with CORS and allow us to server our response to any origin
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    events.queryEventList(function(array) {
+        res.send(array);
+    });
+}
+
 var restify = require('restify');
 var server = restify.createServer();
 server.use( restify.queryParser() );
@@ -329,6 +340,8 @@ server.get('/frontPage', getHashtagProfil);
 server.get('/getEventInfo', getEventInfo);
 
 server.get('/getEventVideo', getEventVideo);
+
+server.get('/getEventList', getEventList);
 
 server.get('/videos/:video', vidStreamer);
 
