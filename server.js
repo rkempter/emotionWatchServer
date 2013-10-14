@@ -164,6 +164,7 @@ function getEventInfo(req, res, next) {
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
     var id = parseInt(req.params.id);
+    console.log(id);
 
     try {
         check(id).isInt();    
@@ -351,7 +352,7 @@ server.get('/event/:id', getEvent);
 
 server.get('/specEvents', getSpecEvents);
 
-server.listen(8080, function() {
+server.listen(8124, function() {
   console.log('%s listening at %s, love & peace', server.name, server.url);
 });
 
