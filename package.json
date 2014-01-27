@@ -10,7 +10,7 @@
 		"validator": ">=0.4.13",
 		"vid-streamer": ">=0.1.2",
 		"config": ">=0.4.24",
-		"assert": ">=0.4.9",
+		"assert": ">=0.4.9"
 	},
 	"engine": ">=0.10.24"
 }

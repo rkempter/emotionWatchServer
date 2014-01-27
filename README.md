@@ -6,6 +6,12 @@ SocialEmotionEye Server is a server that handles request made from the socialemo
 
 ## Installation
 
+1. Start by installing node.js
+2. In the root folder of this project, type ```npm install```. All required dependencies are installed
+3. Next, type ```mkdir config``` and add the database credentials. For more information, read the README of the config module in the folder node_modules.
+4. Type ```node server.js``` in your terminal. The server should start running.
+
+
 ## API
 
 SocialEmotionEye Server has an RESTful API interface with the following possible actions.
