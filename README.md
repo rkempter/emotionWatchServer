@@ -1,5 +1,4 @@
-# socialemotioneye-server
-=======================
+# SocialEmotionEye Server
 
 ## Introduction
 
@@ -57,7 +56,7 @@ $.get('http://localhost:8124/emotionTweets', {
 			"surprise": 0.32192130812468084,
 			"worry": 0.04292284108329076
 		},
-		frequency: "5"
+		"frequency": "5"
 	},
 	"Mon Aug 06 2012 13:49:40 GMT+0200 (CEST)": {
 		"emotions": {
@@ -161,6 +160,8 @@ Response
 
 ### GET `/getEventInfo`
 
+Returns information about the event. (not used anymore I believe)
+
 ```javascript
 $.get( 'http://localhost:8124/getEventInfo', { 
 	id: '513' 
@@ -183,6 +184,8 @@ Response:
 
 ### GET `/getEventVideo`
 
+Request the video of an event using its event-id.
+
 ```javascript
 $.get( 'http://localhost:8124/getEventVideo', { 
 	id: '513' 
@@ -200,6 +203,8 @@ Response:
 
 
 ### GET `/getEventList`
+
+Returns a list with prepared events. This list is currently used on the frontpage of the application. Events are added directly to the database by hand.
 
 ```javascript
 $.get( 'http://localhost:8124/getEventList', function(data) {
@@ -236,11 +241,10 @@ Response
 ]
 ```
 
-### GET `/videos/:video`
-
-Re
-
 ### GET `/event/:id`
+
+Returns the start & end date & time of an event plus all the used keywords for this specific event.
+
 ```javascript
 $.get( 'http://localhost:8124/event/513', function(data) {
 	console.log(data); 
@@ -255,5 +259,6 @@ $.get( 'http://localhost:8124/event/513', function(data) {
 }
 ```
 
+### GET `/videos/:video`
 
-### GET `/specEvents`
+Request for video download.
