@@ -123,22 +123,137 @@ Response:
 ]
 ```
 
-
-
 ### GET `/frequency`
 
-### GET `/frontPage`
+For each time slot between a start datetime and end datetime, the most frequent emotion and the tweet frequency value is given.
+
+Request
+```javascript
+$.get( 'http://localhost:8124/frequency', { 
+	network: 'twitter',
+	windowsize: '5',
+	startDateTime: 'Mon Aug 06 2012 13:49:35 GMT+0200 (CEST)',
+	endDateTime: 'Mon Aug 06 2012 14:22:35 GMT+0200 (CEST)',
+	keyword: [ '513' ],
+	keywordType: 'event' 
+}, function(data) {
+	console.log(data); 
+});
+```
+
+Response
+```javascript
+{
+	"1344253775000": {
+		"emotion": "Pride",
+		"frequency": "5"
+	},
+	"1344253780000": {
+		"emotion": "Involvement",
+		"frequency": "13"
+	},
+	"1344253785000": {
+		"emotion": "Pride",
+		"frequency": "12"
+	}
+}
+```
 
 ### GET `/getEventInfo`
 
+```javascript
+$.get( 'http://localhost:8124/getEventInfo', { 
+	id: '513' 
+}, function(data) {
+	console.log(data); 
+});
+```
+
+Response:
+
+```javascript
+[
+	{
+		event: "Uneven Bars: final, victory ceremony"
+		gender: "Women"
+		sport: "Gymnastics"
+	}
+]
+```
+
 ### GET `/getEventVideo`
+
+```javascript
+$.get( 'http://localhost:8124/getEventVideo', { 
+	id: '513' 
+}, function(data) {
+	console.log(data); 
+});
+```
+Response:
+
+```javascript
+[{
+	video: "gymnastics-unevenbars.mp4"
+}]
+```
+
 
 ### GET `/getEventList`
 
+```javascript
+$.get( 'http://localhost:8124/getEventList', function(data) {
+	console.log(data); 
+});
+```
+
+Response
+
+```javascript
+[
+	"513": {
+		"desc": null,
+		"endDateTime": "2012-08-06T12:22:35.000Z",
+		"event": "Uneven Bars: final, victory ceremony",
+		"gender": "Women",
+		"id": 513,
+		"sport": "Gymnastics",
+		"startDateTime": "2012-08-06T11:49:35.000Z",
+		"twitter": "gymnastics,bars,uneven,ArtisticGymnastics,barFinals,MUSTAFINA Aliya,TWEDDLE Elizabeth,KOMOVA Victoria,Kexin He,YAO Jinnan,DOUGLAS Gabrielle,SEITZ Elisabeth,TSURUMI Koko",
+		"weibo": null
+	},
+	"901": {
+		"desc": null,
+		"endDateTime": "2012-08-05T12:55:00.000Z",
+		"event": "Singles: gold medal match, victory ceremony",
+		"gender": "Men",
+		"id": 901,
+		"sport": "Tennis",
+		"startDateTime": "2012-08-05T10:45:00.000Z",
+		"twitter": "tennis,MURRAY Andy,FEDERER Roger,GoRoger,,TeamFederer,@wimbledon,wimbledon,TeamMurray",
+		"weibo": null
+	}
+]
+```
+
 ### GET `/videos/:video`
 
-### GET `/events`
+Re
 
 ### GET `/event/:id`
+```javascript
+$.get( 'http://localhost:8124/event/513', function(data) {
+	console.log(data); 
+});
+```
+
+```javascript
+{
+	"endDateTime": "2012-08-06T12:22:35.000Z",
+	"startDateTime": "2012-08-06T11:49:35.000Z",
+	"topics": "gymnastics,bars,uneven,ArtisticGymnastics,barFinals,MUSTAFINA Aliya,TWEDDLE Elizabeth,KOMOVA Victoria,Kexin He,YAO Jinnan,DOUGLAS Gabrielle,SEITZ Elisabeth,TSURUMI Koko"
+}
+```
+
 
 ### GET `/specEvents`
