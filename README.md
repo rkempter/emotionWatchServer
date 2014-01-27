@@ -60,14 +60,14 @@ $.get('http://localhost:8124/emotionTweets', {
 		frequency: "5"
 	},
 	"Mon Aug 06 2012 13:49:40 GMT+0200 (CEST)": {
-		emotions: {
-			amusement: 0.11432743720812566,
-			anger: 0.20261838198525606,
-			awe: 0.3522589283648747,
-			contempt: 0.06662608684412946,
-			disgust: 0.0026299771122682697,
-			envy: 0.0011104347807354932,
-			guilt: 0,
+		"emotions": {
+			"amusement": 0.11432743720812566,
+			"anger": 0.20261838198525606,
+			"awe": 0.3522589283648747,
+			"contempt": 0.06662608684412946,
+			"disgust": 0.0026299771122682697,
+			"envy": 0.0011104347807354932,
+			"guilt": 0,
 			"happiness": 0.3774734592881325,
 			"involvement": 1,
 			"love": 0.13565792839287896,
@@ -82,15 +82,46 @@ $.get('http://localhost:8124/emotionTweets', {
 			"surprise": 0.15909717793527886,
 			"worry": 0.015546086930296894
 		},
-		frequency: "13"
+		"frequency": "13"
 	}
 }
 ```
 
 ### GET `/tweets`
+Returns tweets for a specific timespan (defined by start date time and the window size).
 
-returns
+Example for a request:
+```javascript
+$.get( 'http://localhost:8124/tweets', { 
+	datetime: 'Mon Aug 06 2012 13:49:45 GMT+0200 (CEST)',
+	hashtag: [ '513' ],
+	windowsize: '5',
+	network: 'twitter',
+	keywordType: 'event' 
+}, function(data) {
+	console.log(data); 
+});
+```
 
+Response:
+```javascript
+[ 
+{
+	datetime: "2012-08-06 13:49:47",
+	emotion: "involvement",
+	id: 30786665,
+	tweet: "Good Luck Beth Tweddle #London2012 #TeamGB",
+	user: "Oliviaa_Mariee_"
+}, 
+{
+	datetime: "2012-08-06 13:49:49",
+	emotion: "pride",
+	id: 30786724,
+	tweet: "New #leotard for my future #Olympic #athlete (Kamiyah's) #gymnastics class brought by the best friend @kgj26 http://t.co/Yl1yIxOm",
+	user: "iamshaddyshad"
+}
+]
+```
 
 
 
