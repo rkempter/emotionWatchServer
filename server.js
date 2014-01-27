@@ -164,7 +164,6 @@ function getEventInfo(req, res, next) {
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
     var id = parseInt(req.params.id);
-    console.log(id);
 
     try {
         check(id).isInt();    
@@ -254,7 +253,6 @@ function getFrequency(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
-
     var requestType = req.params.keywordType;
     var response = {};
     response['cid'] = req.params.cid;
@@ -307,8 +305,6 @@ function getEvent(req, res, next) {
 
     var id = parseInt(req.params.id);
 
-    console.log('event request with id: '+id);
-
     events.getEvent(id, function(array) {
         res.send(array);
     });
@@ -336,8 +332,6 @@ server.get('/tweets', getTweets);
 
 server.get('/frequency', getFrequency);
 
-server.get('/frontPage', getHashtagProfil);
-
 server.get('/getEventInfo', getEventInfo);
 
 server.get('/getEventVideo', getEventVideo);
@@ -349,8 +343,6 @@ server.get('/videos/:video', vidStreamer);
 server.get('/events', getEvents);
 
 server.get('/event/:id', getEvent);
-
-server.get('/specEvents', getSpecEvents);
 
 server.listen(8124, function() {
   console.log('%s listening at %s, love & peace', server.name, server.url);
