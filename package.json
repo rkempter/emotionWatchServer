@@ -1,0 +1,16 @@
+{
+	"name": "socialemotioneye-server",
+	"description": "Server that handles request sent from the SocialEmotionEye Application.",
+	"author": "Renato Kempter, <renato.kempter@gmail.com>",
+	"dependencies": {
+		"mysql": ">=2.0.0",
+		"forever": ">=0.10.8",
+		"restify": ">=1.4.4",
+		"underscore": ">=1.4.2",
+		"validator": ">=0.4.13",
+		"vid-streamer": ">=0.1.2",
+		"config": ">=0.4.24",
+		"assert": ">=0.4.9",
+	},
+	"engine": ">=0.10.24"
+}
