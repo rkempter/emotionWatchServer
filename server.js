@@ -328,11 +328,6 @@ server.use( restify.bodyParser() );
 
 server.get('/emotionTweets', getEmotionTweets);
 
-<<<<<<< HEAD
-server.get('/emotionPatternTweets', getEmotionTweets);
-
-=======
->>>>>>> dev
 server.get('/tweets', getTweets);
 
 server.get('/frequency', getFrequency);
